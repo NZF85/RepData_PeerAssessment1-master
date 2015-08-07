@@ -27,7 +27,7 @@ names(total.steps.by.day) <- c("date","steps")
 histplot <- ggplot(total.steps.by.day,aes(x = steps)) +
             ggtitle("Histogram of daily steps") +
             xlab("Steps (binwidth 2000)") +
-            geom_histogram(binwidth = 2000) +
+            geom_histogram(colour = "darkgreen", fill = "white",binwidth = 2000) +
             geom_vline(xintercept=mean(total.steps.by.day$steps , na.rm = TRUE),colour="red") +
             geom_vline(xintercept=median(total.steps.by.day$steps , na.rm = TRUE),colour="blue")
 histplot
