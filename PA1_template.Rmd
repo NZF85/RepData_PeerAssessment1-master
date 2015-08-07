@@ -7,14 +7,34 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
+## Loading and preprocessing the data
 ```{r}
-summary(cars)
+
+#Load the data (i.e. read.csv())
+df <- read.csv("activity.csv")
+
+#Process/transform the data (if necessary) into a format suitable for your analysis
+df$date <- as.Date(df$date)
+
 ```
 
-You can also embed plots, for example:
+## What is mean total number of steps taken per day?
+```{r}
+#histogram of the total number of steps taken each day
+library(ggplot2)
+total.steps.by.day <- aggregate(x = df$steps , by = list(df$date), FUN = sum ,na.rm=TRUE)
+names(total.steps.by.day) <- c("date","steps")
+histplot <- ggplot(total.steps.by.day,aes(x = steps)) +
+            ggtitle("Histogram of daily steps") +
+            xlab("Steps (binwidth 2000)") +
+            geom_histogram(binwidth = 2000) +
+            geom_vline(xintercept=mean(total.steps.by.day$steps , na.rm = TRUE),colour="red") +
+            geom_vline(xintercept=median(total.steps.by.day$steps , na.rm = TRUE),colour="blue")
+histplot
 
-```{r, echo=FALSE}
-plot(cars)
+#mean total number of steps taken per day
+mean(total.steps.by.day$steps , na.rm = TRUE)
+#median total number of steps taken per day
+median(total.steps.by.day$steps , na.rm = TRUE)
+
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
