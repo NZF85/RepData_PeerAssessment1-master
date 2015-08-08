@@ -1,11 +1,9 @@
 ---
-title: "Peer Assessment 1, Reproducable Research"
+title: "Reproducible Research: Peer Assessment 1"
 output: html_document
 ---
+**This document contains the completed work for peer assignment #1 for the Coursera Reproducable Research class.**
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ## Loading and preprocessing the data
 ```{r}
@@ -22,19 +20,103 @@ df$date <- as.Date(df$date)
 ```{r}
 #histogram of the total number of steps taken each day
 library(ggplot2)
-total.steps.by.day <- aggregate(x = df$steps , by = list(df$date), FUN = sum ,na.rm=TRUE)
-names(total.steps.by.day) <- c("date","steps")
-histplot <- ggplot(total.steps.by.day,aes(x = steps)) +
+totalsteps <- aggregate(x = df$steps , by = list(df$date), FUN = sum ,na.rm=TRUE)
+
+names(totalsteps) <- c("date","steps")
+#mean total number of steps taken per day
+meansteps<-mean(totalsteps$steps , na.rm = TRUE)
+#median total number of steps taken per day
+mediansteps<-median(totalsteps$steps , na.rm = TRUE)
+histplot <- ggplot(totalsteps,aes(x = steps)) +
             ggtitle("Histogram of daily steps") +
             xlab("Steps (binwidth 2000)") +
             geom_histogram(colour = "darkgreen", fill = "white",binwidth = 2000) +
-            geom_vline(xintercept=mean(total.steps.by.day$steps , na.rm = TRUE),colour="red") +
-            geom_vline(xintercept=median(total.steps.by.day$steps , na.rm = TRUE),colour="blue")
+            geom_vline(xintercept=meansteps,colour="red") +
+            geom_vline(xintercept=mediansteps,colour="blue")+
+            geom_text(aes(x=meansteps, label="\nmean", y=10), colour="red", angle=90, text=element_text(size=11))+
+            geom_text(aes(x=mediansteps, label="\nmedian", y=10), colour="blue", angle=90, text=element_text(size=11))
 histplot
 
+
+
+
+```
+
+## What is the average daily activity pattern?
+```{r}
+#Time series plot of 5-minute interval and the average number of steps taken, averaged across all days
+averagesteps  <- aggregate(x = df$steps , by = list(df$interval), FUN = mean ,na.rm=TRUE)
+names(averagesteps) <- c("interval","steps")
+
+avgline <- ggplot(averagesteps,aes(interval,steps)) +
+                 ggtitle("Time Series Plot of Average Steps by Interval") +
+                 geom_line()
+avgline  
+
+#The 5-min time interval contains the maximum number of steps?
+averagesteps[which.max(averagesteps$steps),c("interval")]
+
+```
+
+
+## Imputing missing values
+```{r}
+#total number of missing values in the dataset
+nrow(df[is.na(df$steps),])
+
+#imputing missing step values with mean step at time interval
+dfnew <- merge(x = df, y = averagesteps, by = "interval", all.x = TRUE)
+dfnew[is.na(dfnew$steps.x),c("steps.x")] <- dfnew[is.na(dfnew$steps.x),c("steps.y")]
+
+#cleaning data
+dfnew$date <- as.Date(dfnew$date)
+dfnew$date.x <- NULL
+dfnew$Group.1 <- NULL
+dfnew$steps <- dfnew$steps.x
+dfnew$steps.x <- NULL
+dfnew$steps.y <- NULL
+
+#histogram with new dataframe
+totalsteps <- aggregate(x = dfnew$steps , by = list(dfnew$date), FUN = sum ,na.rm=TRUE)
+names(totalsteps) <- c("date","steps")
+
 #mean total number of steps taken per day
-mean(total.steps.by.day$steps , na.rm = TRUE)
+mean(totalsteps$steps , na.rm = TRUE)
 #median total number of steps taken per day
-median(total.steps.by.day$steps , na.rm = TRUE)
+median(totalsteps$steps , na.rm = TRUE)
+
+
+histplot <- ggplot(totalsteps,aes(x = steps)) +
+            ggtitle("Histogram of daily steps after imputation") +
+            xlab("Steps (binwidth 2000)") +
+            geom_histogram(colour = "darkgreen", fill = "white",binwidth = 2000) +
+            geom_vline(xintercept=meansteps,colour="red") +
+            geom_vline(xintercept=mediansteps,colour="blue")+
+            geom_text(aes(x=meansteps, label="\nmean", y=10), colour="red", angle=90, text=element_text(size=11))+
+            geom_text(aes(x=mediansteps, label="\nmedian", y=10), colour="blue", angle=90, text=element_text(size=11))
+histplot 
+
+
+
+```
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+```{r, fig.width= 10}
+#Factor variable with two levels indicating a weekday or weekend.
+dfnew$weekday <- as.factor(ifelse(weekdays(dfnew$date) %in% c("Saturday","Sunday"), "Weekend", "Weekday")) 
+
+averagesteps.and.weekday  <- aggregate(x = dfnew$steps , 
+                                                    by = list(dfnew$interval,dfnew$weekday), FUN = mean ,na.rm=TRUE)
+names(averagesteps.and.weekday) <- c("interval","weekday","steps")
+
+#panel time series plot of the 5-minute interval and the average number of steps taken 
+#averaged across all weekday days or weekend days.
+avgline <- ggplot(averagesteps.and.weekday,aes(interval,steps)) +
+                 ggtitle("Time Series Plot of Average Steps by Interval after Imputation") +
+                 facet_grid(. ~ weekday) +
+                 geom_line(size = 1)
+avgline  
+
 
 ```
