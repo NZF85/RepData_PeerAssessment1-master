@@ -106,13 +106,13 @@ histplot
 #Factor variable with two levels indicating a weekday or weekend.
 dfnew$weekday <- as.factor(ifelse(weekdays(dfnew$date) %in% c("Saturday","Sunday"), "Weekend", "Weekday")) 
 
-averagesteps.and.weekday  <- aggregate(x = dfnew$steps , 
+avgweekday  <- aggregate(x = dfnew$steps , 
                                                     by = list(dfnew$interval,dfnew$weekday), FUN = mean ,na.rm=TRUE)
-names(averagesteps.and.weekday) <- c("interval","weekday","steps")
+names(avgweekday) <- c("interval","weekday","steps")
 
 #panel time series plot of the 5-minute interval and the average number of steps taken 
 #averaged across all weekday days or weekend days.
-avgline <- ggplot(averagesteps.and.weekday,aes(interval,steps)) +
+avgline <- ggplot(avgweekday,aes(interval,steps)) +
                  ggtitle("Time Series Plot of Average Steps by Interval after Imputation") +
                  facet_grid(. ~ weekday) +
                  geom_line(size = 1)
